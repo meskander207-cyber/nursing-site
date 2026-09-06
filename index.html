@@ -1057,7 +1057,7 @@ body.dark .site-footer { border-color: var(--border); }
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
   import {
     getAuth,
     signInWithEmailAndPassword,
@@ -1076,6 +1076,8 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https
 
   try {
     const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+    window.db = db;
     window.firebaseAuth = getAuth(firebaseApp);
     window.firebaseSignIn = signInWithEmailAndPassword;
     window.firebaseSignOut = signOut;
