@@ -1057,6 +1057,7 @@ body.dark .site-footer { border-color: var(--border); }
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
   import {
     getAuth,
     signInWithEmailAndPassword,
@@ -1767,7 +1768,8 @@ function showSection(id) {
         renderQuizStart();
     }
 }
-
+// ==================== FIRESTORE ====================
+const db = getFirestore(firebaseApp);
 // ==================== INIT ====================
 loadTheme();
 renderSubjects();
