@@ -371,6 +371,10 @@ body.dark .section-icon { background: rgba(255,255,255,0.06); }
     color: #fff;
 }
 
+
+/* ========== SUBJECTS / CHAPTERS ========== */
+.subject-chapter-list { margin-top: 6px; }
+
 /* ========== FILES ========== */
 .file-item {
     display: flex;
@@ -738,12 +742,68 @@ body.dark .section-icon { background: rgba(255,255,255,0.06); }
 }
 body.dark .site-footer { border-color: var(--border); }
 
-/* ========== ANIMATIONS ========== */
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
+/* ========== BRANDING MOTION ========== */
+:root {
+    --motion-fast: 180ms;
+    --motion-base: 360ms;
+    --motion-slow: 620ms;
+    --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
-.animate-in { animation: slideIn 0.4s ease; }
+
+@keyframes brandReveal {
+    from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.992); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes brandSlide {
+    from { opacity: 0; transform: translate3d(14px, 0, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes brandFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.animate-in {
+    animation: brandSlide var(--motion-base) var(--motion-ease) both;
+    will-change: transform, opacity;
+}
+
+.file-item.animate-in:nth-child(2),
+.news-item.animate-in:nth-child(2) { animation-delay: 45ms; }
+.file-item.animate-in:nth-child(3),
+.news-item.animate-in:nth-child(3) { animation-delay: 90ms; }
+.file-item.animate-in:nth-child(4),
+.news-item.animate-in:nth-child(4) { animation-delay: 135ms; }
+.file-item.animate-in:nth-child(5),
+.news-item.animate-in:nth-child(5) { animation-delay: 180ms; }
+
+.login-card { animation: brandReveal var(--motion-slow) var(--motion-ease) both; }
+.dev-panel { animation: brandReveal var(--motion-base) var(--motion-ease) both; }
+
+.card, .nav-card, .btn, .section-icon, input, select, textarea {
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease);
+}
+
+.btn:hover, .nav-card:hover {
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0) scale(0.985);
+    transition-duration: var(--motion-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
+}
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 480px) {
@@ -763,6 +823,25 @@ body.dark .site-footer { border-color: var(--border); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        .dev-hint{font-size:12px;color:rgba(255,255,255,.55);margin:-6px 0 14px;line-height:1.7}
+        .quiz-add-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-top:12px}
+        .quiz-add-title{font-weight:800;margin-bottom:10px}
+        .quiz-inline{display:grid;grid-template-columns:1fr 140px;gap:8px}
+        .quiz-inline .dev-select,.quiz-inline .dev-input{margin-bottom:10px}
+        .quiz-list-heading{font-weight:800;font-size:13px;margin:16px 0 8px}
+        .quiz-q-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px;margin-bottom:8px}
+        .quiz-q-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+        .quiz-q-text{font-size:13px;line-height:1.7}
+        .quiz-q-meta{font-size:11px;color:rgba(255,255,255,.55);margin-top:5px}
+        .quiz-q-actions{display:flex;gap:5px;flex-shrink:0}
+        .quiz-q-actions button{border:0;border-radius:8px;padding:6px 9px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff}
+        .quiz-timer{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:14px;margin:12px 0}
+        .quiz-timer-value{min-width:54px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.08);text-align:center}
+        .quiz-timer-value.warning{background:rgba(255,180,0,.18)}
+        .quiz-timer-value.danger{background:rgba(255,70,70,.2)}
+        @media(max-width:520px){.quiz-inline{grid-template-columns:1fr}.quiz-q-top{display:block}.quiz-q-actions{margin-top:8px}}
+
 </style>
 </head>
 <body>
@@ -822,7 +901,7 @@ body.dark .site-footer { border-color: var(--border); }
             <div class="nav-card" onclick="showSection('quiz')">
                 <div class="nav-card-info">
                     <h3>ابدأ الاختبار</h3>
-                    <p>عدد الأسئلة: <span id="quizCount">0</span> أسئلة</p>
+                    <p>إجمالي الأسئلة: <span id="quizCount">0</span> سؤال</p>
                 </div>
                 <div class="nav-card-arrow">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -830,66 +909,90 @@ body.dark .site-footer { border-color: var(--border); }
             </div>
         </div>
 
-        <!-- FILES -->
+        <!-- SUBJECTS -->
         <div class="section">
             <div class="section-header">
                 <div class="section-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
-                <h2>المحاضرات والملفات</h2>
+                <h2>المواد الدراسية</h2>
             </div>
 
             <!-- DEV PANEL -->
             <div id="devPanel" class="dev-panel hidden">
-                <!-- Developer Exit -->
                 <button class="btn btn-secondary" onclick="exitDevMode()" style="margin-bottom:16px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="16" y2="7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     خروج من وضع المطور
                 </button>
 
-                <!-- Add Link -->
-                <div class="dev-panel-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    إضافة رابط تحميل
-                </div>
-                <input id="linkName" class="dev-input" type="text" placeholder="اسم الكتاب أو الملف">
-                <input id="linkUrl" class="dev-input" type="text" placeholder="رابط التحميل">
-                <button class="btn" onclick="addLink()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    إضافة الرابط
-                </button>
-                <div id="fileDevList" class="dev-list"></div>
+                <div class="dev-panel-title">إضافة مادة دراسية</div>
+                <input id="subjectName" class="dev-input" type="text" placeholder="اسم المادة">
+                <button class="btn" onclick="addSubject()">إضافة المادة</button>
 
-                <!-- Add Question -->
                 <div class="dev-section">
-                    <div class="dev-panel-title">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        إضافة سؤال جديد
-                    </div>
-                    <input id="qText" class="dev-input" type="text" placeholder="نص السؤال">
-                    <input id="qA" class="dev-input" type="text" placeholder="الإجابة أ">
-                    <input id="qB" class="dev-input" type="text" placeholder="الإجابة ب">
-                    <input id="qC" class="dev-input" type="text" placeholder="الإجابة ج">
-                    <input id="qD" class="dev-input" type="text" placeholder="الإجابة د">
-                    <select id="qCorrect" class="dev-select">
-                        <option value="0">الإجابة الصحيحة: أ</option>
-                        <option value="1">الإجابة الصحيحة: ب</option>
-                        <option value="2">الإجابة الصحيحة: ج</option>
-                        <option value="3">الإجابة الصحيحة: د</option>
+                    <div class="dev-panel-title">إضافة Chapter</div>
+                    <select id="chapterSubject" class="dev-select"></select>
+                    <input id="chapterName" class="dev-input" type="text" placeholder="اسم الـ Chapter">
+                    <button class="btn" onclick="addChapter()">إضافة Chapter</button>
+                </div>
+
+                <div class="dev-section">
+                    <div class="dev-panel-title">إضافة رابط داخل Chapter</div>
+                    <select id="linkSubject" class="dev-select" onchange="refreshDevChapterSelect('linkSubject','linkChapter')"></select>
+                    <select id="linkChapter" class="dev-select"></select>
+                    <input id="linkName" class="dev-input" type="text" placeholder="اسم الكتاب أو الملف">
+                    <input id="linkUrl" class="dev-input" type="text" placeholder="رابط التحميل">
+                    <button class="btn" onclick="addLink()">إضافة الرابط</button>
+                </div>
+
+                <div class="dev-section quiz-manager">
+                    <div class="dev-panel-title">📝 إدارة الأسئلة والاختبارات</div>
+                    <div class="dev-hint">اختر المادة والـ Chapter، ثم اختر نوع السؤال. يمكنك إضافة اختيار من متعدد أو صح/خطأ، ولكل سؤال مدة مستقلة.</div>
+                    <select id="questionSubject" class="dev-select" onchange="refreshDevChapterSelect('questionSubject','questionChapter'); renderDevQuestionManager()"></select>
+                    <select id="questionChapter" class="dev-select" onchange="renderDevQuestionManager()"></select>
+                    <select id="qType" class="dev-select" onchange="toggleQuestionTypeFields()">
+                        <option value="mcq">اختيار من متعدد</option>
+                        <option value="tf">صح / خطأ</option>
                     </select>
-                    <button class="btn" onclick="addQuestion()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        إضافة السؤال
-                    </button>
-                    <div id="qList" class="dev-list"></div>
+                    <div class="quiz-add-card">
+                        <div class="quiz-add-title">إضافة سؤال جديد</div>
+                        <input id="qText" class="dev-input" type="text" placeholder="نص السؤال">
+                        <div id="mcqFields">
+                            <input id="qA" class="dev-input" type="text" placeholder="الإجابة أ">
+                            <input id="qB" class="dev-input" type="text" placeholder="الإجابة ب">
+                            <input id="qC" class="dev-input" type="text" placeholder="الإجابة ج">
+                            <input id="qD" class="dev-input" type="text" placeholder="الإجابة د">
+                            <select id="qCorrect" class="dev-select">
+                                <option value="0">الإجابة الصحيحة: أ</option>
+                                <option value="1">الإجابة الصحيحة: ب</option>
+                                <option value="2">الإجابة الصحيحة: ج</option>
+                                <option value="3">الإجابة الصحيحة: د</option>
+                            </select>
+                        </div>
+                        <div id="tfFields" class="hidden">
+                            <select id="qTFAnswer" class="dev-select">
+                                <option value="true">الإجابة الصحيحة: صح</option>
+                                <option value="false">الإجابة الصحيحة: خطأ</option>
+                            </select>
+                        </div>
+                        <input id="qTime" class="dev-input" type="number" min="5" max="3600" value="30" placeholder="مدة السؤال بالثواني">
+                        <button class="btn" onclick="addQuestion()">➕ إضافة السؤال</button>
+                    </div>
+                    <div class="quiz-manager-list">
+                        <div class="quiz-list-heading">الأسئلة في الاختيار الحالي</div>
+                        <div id="devQuestionManagerList"></div>
+                    </div>
                 </div>
 
-                <!-- Add News -->
                 <div class="dev-section">
-                    <div class="dev-panel-title">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        إضافة تنبيه جديد
-                    </div>
+                    <div class="dev-panel-title">المحتوى الحالي</div>
+                    <div id="subjectDevList" class="dev-list"></div>
+                    <div id="qList" class="dev-list"></div>
+                    <div id="nList" class="dev-list"></div>
+                </div>
+
+                <div class="dev-section">
+                    <div class="dev-panel-title">إضافة تنبيه جديد</div>
                     <input id="nTitle" class="dev-input" type="text" placeholder="عنوان التنبيه">
                     <input id="nDesc" class="dev-input" type="text" placeholder="وصف التنبيه">
                     <select id="nType" class="dev-select">
@@ -897,25 +1000,21 @@ body.dark .site-footer { border-color: var(--border); }
                         <option value="urgent">نوع: عاجل</option>
                         <option value="warning">نوع: تذكير</option>
                     </select>
-                    <button class="btn" onclick="addNews()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        إضافة التنبيه
-                    </button>
-                    <div id="nList" class="dev-list"></div>
+                    <button class="btn" onclick="addNews()">إضافة التنبيه</button>
                 </div>
             </div>
 
             <!-- DEV: Password Unlock -->
             <div id="devUnlock" class="dev-panel hidden">
                 <div class="dev-panel-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     تأكيد هوية المطور
                 </div>
                 <input id="devPassword" class="dev-input" type="password" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')unlockDev()">
                 <button class="btn" onclick="unlockDev()">فتح لوحة التحكم</button>
             </div>
 
-            <div id="filesList"></div>
+            <div id="subjectsList"></div>
         </div>
 
         <!-- NEWS -->
@@ -952,15 +1051,49 @@ body.dark .site-footer { border-color: var(--border); }
     <div class="card" id="quizCard"></div>
 </div>
 
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCr383kjPg4mZVz6lB7P2njeKug2UzGUKI",
+    authDomain: "nursing-community.firebaseapp.com",
+    projectId: "nursing-community",
+    storageBucket: "nursing-community.firebasestorage.app",
+    messagingSenderId: "779020569439",
+    appId: "1:779020569439:web:0f163694bf561f324b04ea"
+  };
+
+  try {
+    const firebaseApp = initializeApp(firebaseConfig);
+    window.firebaseAuth = getAuth(firebaseApp);
+    window.firebaseSignIn = signInWithEmailAndPassword;
+    window.firebaseSignOut = signOut;
+    window.firebaseOnAuthStateChanged = onAuthStateChanged;
+    window.firebaseReady = true;
+    window.dispatchEvent(new Event('firebase-ready'));
+  } catch (error) {
+    console.error('Firebase initialization failed:', error);
+    window.firebaseReady = false;
+    window.dispatchEvent(new Event('firebase-error'));
+  }
+</script>
+
 <script>
 // ==================== CONFIG ====================
-const DEV_PASSWORD = "Mostafa123@ka";
+// Firebase Authentication handles the developer password securely.
 
-// ==================== DATA (ALL EMPTY) ====================
-let fileLinks = [];
-
+// ==================== DATA ====================
+let subjects = JSON.parse(localStorage.getItem('ni_subjects')) || [];
 let questions = JSON.parse(localStorage.getItem('ni_questions')) || [];
 let newsItems = JSON.parse(localStorage.getItem('ni_news')) || [];
+questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
 
 // ==================== STATE ====================
 let student = "";
@@ -968,8 +1101,36 @@ let current = 0;
 let score = 0;
 let selected = null;
 let devUnlocked = false;
+let activeQuizQuestions = [];
+let activeQuizSubject = "";
+let activeQuizChapter = "";
+let quizTimer = null;
+let questionSecondsLeft = 0;
+// Firebase auth state is synchronized with the developer session.
+function bindFirebaseAuthListener() {
+    if (!window.firebaseOnAuthStateChanged || !window.firebaseAuth) return;
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+        if (!user && devUnlocked) {
+            devUnlocked = false;
+            document.getElementById('devPanel')?.classList.add('hidden');
+        }
+    });
+}
+window.addEventListener('firebase-ready', bindFirebaseAuthListener, { once: true });
+
+
 
 // ==================== UTILS ====================
+function saveData() {
+    localStorage.setItem('ni_subjects', JSON.stringify(subjects));
+    localStorage.setItem('ni_questions', JSON.stringify(questions));
+    localStorage.setItem('ni_news', JSON.stringify(newsItems));
+}
+
+function makeId(prefix) {
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -996,8 +1157,8 @@ function login() {
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('devTrigger').classList.remove('hidden');
     document.getElementById('welcome').textContent = 'أهلاً بك، ' + name + ' 👋';
-    document.getElementById('quizCount').textContent = questions.length;
-    renderFiles();
+    updateQuizCount();
+    renderSubjects();
     renderNews();
     loadTheme();
 }
@@ -1006,8 +1167,21 @@ function login() {
 function showDevUnlock() {
     const panel = document.getElementById('devUnlock');
     panel.classList.remove('hidden');
-    panel.scrollIntoView({ behavior: 'smooth' });
-    document.getElementById('devPassword').focus();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const status = document.getElementById('firebaseStatus');
+    if (window.firebaseReady) {
+        status.textContent = 'Firebase جاهز — أدخل بيانات حساب المطور';
+    } else {
+        status.textContent = 'جاري تحميل Firebase...';
+    }
+
+    setTimeout(() => document.getElementById('devEmail')?.focus(), 150);
+}
+
+function hideDevUnlock() {
+    document.getElementById('devUnlock').classList.add('hidden');
+    document.getElementById('devPassword').value = '';
 }
 
 function exitDevMode() {
@@ -1015,183 +1189,429 @@ function exitDevMode() {
     document.getElementById('devPanel').classList.add('hidden');
     document.getElementById('devUnlock').classList.add('hidden');
     document.getElementById('devPassword').value = '';
-    renderFiles();
+    renderSubjects();
+
+    if (window.firebaseAuth && window.firebaseSignOut) {
+        window.firebaseSignOut(window.firebaseAuth).catch(() => {});
+    }
 }
 
-function unlockDev() {
-    if (document.getElementById('devPassword').value === DEV_PASSWORD) {
+function waitForFirebase(timeout = 10000) {
+    if (window.firebaseReady && window.firebaseAuth && window.firebaseSignIn) {
+        return Promise.resolve(true);
+    }
+
+    return new Promise(resolve => {
+        let done = false;
+        const finish = value => {
+            if (done) return;
+            done = true;
+            window.removeEventListener('firebase-ready', onReady);
+            window.removeEventListener('firebase-error', onError);
+            clearTimeout(timer);
+            resolve(value);
+        };
+        const onReady = () => finish(true);
+        const onError = () => finish(false);
+        const timer = setTimeout(() => finish(false), timeout);
+
+        window.addEventListener('firebase-ready', onReady, { once: true });
+        window.addEventListener('firebase-error', onError, { once: true });
+    });
+}
+
+async function unlockDev() {
+    const email = document.getElementById('devEmail').value.trim();
+    const password = document.getElementById('devPassword').value;
+    const button = document.getElementById('devLoginBtn');
+    const status = document.getElementById('firebaseStatus');
+
+    if (!email || !password) {
+        showToast('اكتب البريد الإلكتروني وكلمة المرور');
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'جاري التحقق...';
+    status.textContent = 'جاري الاتصال بـ Firebase...';
+
+    try {
+        const ready = await waitForFirebase();
+
+        if (!ready || !window.firebaseAuth || !window.firebaseSignIn) {
+            throw { code: 'firebase/not-ready' };
+        }
+
+        const credential = await window.firebaseSignIn(
+            window.firebaseAuth,
+            email,
+            password
+        );
+
+        if (!credential || !credential.user) {
+            throw { code: 'auth/no-user' };
+        }
+
         devUnlocked = true;
         document.getElementById('devUnlock').classList.add('hidden');
         document.getElementById('devPanel').classList.remove('hidden');
         renderDevLists();
-        renderFiles();
-        showToast('تم فتح لوحة المطور');
-    } else {
-        showToast('كلمة المرور غير صحيحة');
+        renderSubjects();
+        showToast('تم تسجيل دخول المطور بنجاح');
+    } catch (error) {
+        console.error('Developer Firebase login error:', error);
+
+        let msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        if (error?.code === 'firebase/not-ready') {
+            msg = 'تعذر تحميل Firebase. افتح الموقع من استضافة أو HTTPS وتأكد من اتصال الإنترنت';
+            status.textContent = msg;
+        } else if (error?.code === 'auth/too-many-requests') {
+            msg = 'تمت محاولات كثيرة، حاول لاحقًا';
+        } else if (error?.code === 'auth/network-request-failed') {
+            msg = 'تحقق من اتصال الإنترنت';
+        } else if (error?.code === 'auth/invalid-credential' || error?.code === 'auth/invalid-login-credentials') {
+            msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        }
+
+        showToast(msg);
         document.getElementById('devPassword').value = '';
+    } finally {
+        button.disabled = false;
+        button.textContent = 'دخول لوحة التحكم';
     }
 }
 
-// Add Link
+// ==================== SUBJECTS / CHAPTERS ====================
+function addSubject() {
+    const name = document.getElementById('subjectName').value.trim();
+    if (!name) { showToast('اكتب اسم المادة'); return; }
+
+    subjects.unshift({ id: makeId('sub'), name, chapters: [] });
+    document.getElementById('subjectName').value = '';
+    saveData();
+    renderSubjects();
+    refreshAllDevSelects();
+    showToast('تم إضافة المادة');
+}
+
+function addChapter() {
+    const subjectId = document.getElementById('chapterSubject').value;
+    const name = document.getElementById('chapterName').value.trim();
+    const subject = subjects.find(s => s.id === subjectId);
+
+    if (!subject) { showToast('أضف مادة أولاً'); return; }
+    if (!name) { showToast('اكتب اسم الـ Chapter'); return; }
+
+    subject.chapters.push({ id: makeId('ch'), name, links: [] });
+    document.getElementById('chapterName').value = '';
+    saveData();
+    renderSubjects();
+    refreshAllDevSelects();
+    showToast('تم إضافة الـ Chapter');
+}
+
 function addLink() {
+    const subjectId = document.getElementById('linkSubject').value;
+    const chapterId = document.getElementById('linkChapter').value;
     const name = document.getElementById('linkName').value.trim();
     const url = document.getElementById('linkUrl').value.trim();
-    if (!name || !url) { showToast('اكتب الاسم والرابط'); return; }
-    fileLinks.unshift({ name: name, url: url, size: "رابط خارجي" });
+
+    const chapter = getChapter(subjectId, chapterId);
+    if (!chapter) { showToast('اختر المادة والـ Chapter'); return; }
+    if (!name || !url) { showToast('اكتب اسم الرابط والرابط'); return; }
+
+    chapter.links.unshift({ id: makeId('lnk'), name, url, size: 'رابط خارجي' });
     document.getElementById('linkName').value = '';
     document.getElementById('linkUrl').value = '';
-    renderFiles();
+    saveData();
+    renderSubjects();
     renderDevLists();
     showToast('تم إضافة الرابط');
 }
 
-// Add Question
 function addQuestion() {
+    const subjectId = document.getElementById('questionSubject').value;
+    const chapterId = document.getElementById('questionChapter').value;
     const text = document.getElementById('qText').value.trim();
-    const a = document.getElementById('qA').value.trim();
-    const b = document.getElementById('qB').value.trim();
-    const c = document.getElementById('qC').value.trim();
-    const d = document.getElementById('qD').value.trim();
-    const correct = parseInt(document.getElementById('qCorrect').value);
-    if (!text || !a || !b || !c || !d) { showToast('اكمل كل الحقول'); return; }
-    questions.push({ question: text, answers: [a, b, c, d], correct: correct });
-    localStorage.setItem('ni_questions', JSON.stringify(questions));
+    const type = document.getElementById('qType').value;
+    const time = Math.max(5, Math.min(3600, parseInt(document.getElementById('qTime').value, 10) || 30));
+    if (!getChapter(subjectId, chapterId)) { showToast('اختر المادة والـ Chapter'); return; }
+    if (!text) { showToast('اكتب نص السؤال'); return; }
+
+    let item;
+    if (type === 'mcq') {
+        const answers = ['qA','qB','qC','qD'].map(id => document.getElementById(id).value.trim());
+        const correct = parseInt(document.getElementById('qCorrect').value);
+        if (answers.some(x => !x)) { showToast('اكمل الاختيارات الأربعة'); return; }
+        item = { id: makeId('q'), subjectId, chapterId, type:'mcq', question:text, answers, correct, time };
+    } else {
+        const correct = document.getElementById('qTFAnswer').value === 'true';
+        item = { id: makeId('q'), subjectId, chapterId, type:'tf', question:text, correct, time };
+    }
+    questions.push(item);
     document.getElementById('qText').value = '';
-    document.getElementById('qA').value = '';
-    document.getElementById('qB').value = '';
-    document.getElementById('qC').value = '';
-    document.getElementById('qD').value = '';
-    document.getElementById('quizCount').textContent = questions.length;
-    renderDevLists();
+    ['qA','qB','qC','qD'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('qTime').value = '30';
+    saveData(); updateQuizCount(); renderDevLists(); renderDevQuestionManager();
     showToast('تم إضافة السؤال');
 }
 
-function deleteQuestion(index) {
-    if (confirm('حذف هذا السؤال؟')) {
-        questions.splice(index, 1);
-        localStorage.setItem('ni_questions', JSON.stringify(questions));
-        document.getElementById('quizCount').textContent = questions.length;
-        renderDevLists();
-        showToast('تم حذف السؤال');
-    }
+function toggleQuestionTypeFields() {
+    const tf = document.getElementById('qType').value === 'tf';
+    document.getElementById('mcqFields').classList.toggle('hidden', tf);
+    document.getElementById('tfFields').classList.toggle('hidden', !tf);
 }
 
-// Add News
 function addNews() {
     const title = document.getElementById('nTitle').value.trim();
     const desc = document.getElementById('nDesc').value.trim();
     const type = document.getElementById('nType').value;
     if (!title || !desc) { showToast('اكمل كل الحقول'); return; }
+
     const badges = { new: 'جديد', urgent: 'عاجل', warning: 'تذكير' };
     const today = new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
-    newsItems.unshift({ date: today, title: title, desc: desc, type: type, badge: badges[type] });
-    localStorage.setItem('ni_news', JSON.stringify(newsItems));
+    newsItems.unshift({ date: today, title, desc, type, badge: badges[type] });
+
     document.getElementById('nTitle').value = '';
     document.getElementById('nDesc').value = '';
+    saveData();
     renderNews();
     renderDevLists();
     showToast('تم إضافة التنبيه');
 }
 
-function deleteNews(index) {
-    if (confirm('حذف هذا التنبيه؟')) {
-        newsItems.splice(index, 1);
-        localStorage.setItem('ni_news', JSON.stringify(newsItems));
-        renderNews();
-        renderDevLists();
-        showToast('تم حذف التنبيه');
-    }
+function getChapter(subjectId, chapterId) {
+    const subject = subjects.find(s => s.id === subjectId);
+    return subject ? subject.chapters.find(c => c.id === chapterId) : null;
 }
 
+function deleteSubject(index) {
+    const subject = subjects[index];
+    if (!subject) return;
+    if (!confirm('هل أنت متأكد من حذف المادة «' + subject.name + '» بكل الـ Chapters والأسئلة والروابط الخاصة بها؟')) return;
+    questions = questions.filter(q => q.subjectId !== subject.id);
+    subjects.splice(index, 1);
+    saveData();
+    renderSubjects();
+    renderDevLists();
+    refreshAllDevSelects();
+    updateQuizCount();
+    showToast('تم حذف المادة');
+}
+
+function deleteChapter(subjectId, chapterId) {
+    if (!confirm('هل أنت متأكد من حذف الـ Chapter «' + (getChapter(subjectId, chapterId)?.name || '') + '» بكل الروابط والأسئلة الخاصة به؟')) return;
+    const subject = subjects.find(s => s.id === subjectId);
+    if (!subject) return;
+
+    questions = questions.filter(q => !(q.subjectId === subjectId && q.chapterId === chapterId));
+    subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
+    saveData();
+    renderSubjects();
+    renderDevLists();
+    refreshAllDevSelects();
+    updateQuizCount();
+    showToast('تم حذف الـ Chapter');
+}
+
+function deleteLink(subjectId, chapterId, linkId) {
+    if (!confirm('هل أنت متأكد من حذف الرابط «' + ((getChapter(subjectId, chapterId)?.links || []).find(l => l.id === linkId)?.name || '') + '»؟')) return;
+    const chapter = getChapter(subjectId, chapterId);
+    if (!chapter) return;
+    chapter.links = chapter.links.filter(l => l.id !== linkId);
+    saveData();
+    renderSubjects();
+    renderDevLists();
+    showToast('تم حذف الرابط');
+}
+
+function deleteQuestion(id) {
+    const questionToDelete = questions.find(q => q.id === id);
+    if (!confirm('هل أنت متأكد من حذف السؤال «' + (questionToDelete?.question || '') + '»؟')) return;
+    questions = questions.filter(q => q.id !== id);
+    saveData();
+    updateQuizCount();
+    renderDevLists();
+    showToast('تم حذف السؤال');
+}
+
+function deleteNews(index) {
+    if (!confirm('هل أنت متأكد من حذف التنبيه «' + (newsItems[index]?.title || '') + '»؟')) return;
+    newsItems.splice(index, 1);
+    saveData();
+    renderNews();
+    renderDevLists();
+    showToast('تم حذف التنبيه');
+}
+
+// ==================== DEV SELECTS ====================
+function fillSubjectSelect(id, placeholder) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const old = select.value;
+    select.innerHTML = `<option value="">${placeholder}</option>` +
+        subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    if (subjects.some(s => s.id === old)) select.value = old;
+}
+
+function refreshDevChapterSelect(subjectSelectId, chapterSelectId) {
+    const subjectId = document.getElementById(subjectSelectId)?.value;
+    const select = document.getElementById(chapterSelectId);
+    if (!select) return;
+    const subject = subjects.find(s => s.id === subjectId);
+    select.innerHTML = '<option value="">اختر الـ Chapter</option>' +
+        (subject ? subject.chapters.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('') : '');
+}
+
+function refreshAllDevSelects() {
+    fillSubjectSelect('chapterSubject', 'اختر المادة');
+    fillSubjectSelect('linkSubject', 'اختر المادة');
+    fillSubjectSelect('questionSubject', 'اختر المادة');
+    refreshDevChapterSelect('linkSubject', 'linkChapter');
+    refreshDevChapterSelect('questionSubject', 'questionChapter');
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+    }[ch]));
+}
+
+// ==================== DEV LISTS ====================
 function renderDevLists() {
-    const fList = document.getElementById('fileDevList');
-    if (fList) {
-        if (fileLinks.length === 0) {
-            fList.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;padding:10px;">لا توجد روابط</div>';
-        } else {
-            fList.innerHTML = fileLinks.map((f, i) => `
-                <div class="dev-list-item">
-                    <span>${i+1}. ${f.name}</span>
-                    <button onclick="deleteLink(${i})" title="حذف">حذف</button>
+    refreshAllDevSelects();
+
+    const box = document.getElementById('subjectDevList');
+    if (box) {
+        box.innerHTML = subjects.length ? subjects.map((s, si) => `
+            <div class="dev-list-item" style="display:block;">
+                <div style="display:flex;justify-content:space-between;gap:8px;">
+                    <span><strong>${si+1}. ${escapeHtml(s.name)}</strong></span>
+                    <button onclick="deleteSubject(${si})">حذف المادة</button>
                 </div>
-            `).join('');
-        }
+                ${s.chapters.map((c, ci) => `
+                    <div style="margin-top:8px;padding-right:10px;border-right:2px solid rgba(255,255,255,.12);">
+                        <div style="display:flex;justify-content:space-between;gap:8px;">
+                            <span>${ci+1}. ${escapeHtml(c.name)} (${c.links.length} روابط)</span>
+                            <button onclick="deleteChapter('${s.id}','${c.id}')">حذف</button>
+                        </div>
+                        ${c.links.map(l => `
+                            <div style="display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:12px;">
+                                <span>↳ ${escapeHtml(l.name)}</span>
+                                <button onclick="deleteLink('${s.id}','${c.id}','${l.id}')">حذف</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            </div>
+        `).join('') : '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:13px;padding:10px;">لا توجد مواد</div>';
     }
 
     const qList = document.getElementById('qList');
     if (qList) {
-        if (questions.length === 0) {
-            qList.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;padding:10px;">لا توجد أسئلة</div>';
-        } else {
-            qList.innerHTML = questions.map((q, i) => `
-                <div class="dev-list-item">
-                    <span>${i+1}. ${q.question.substring(0, 40)}${q.question.length > 40 ? '...' : ''}</span>
-                    <button onclick="deleteQuestion(${i})">حذف</button>
-                </div>
-            `).join('');
-        }
+        qList.innerHTML = questions.length ? questions.map((q, i) => {
+            const s = subjects.find(x => x.id === q.subjectId);
+            const c = s?.chapters.find(x => x.id === q.chapterId);
+            return `<div class="dev-list-item">
+                <span>${i+1}. ${escapeHtml(q.question.substring(0, 45))}${q.question.length > 45 ? '...' : ''}<br><small>${escapeHtml(s?.name || '')} - ${escapeHtml(c?.name || '')} - ${q.correct ? 'صح' : 'خطأ'}</small></span>
+                <button onclick="deleteQuestion('${q.id}')">حذف</button>
+            </div>`;
+        }).join('') : '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:13px;padding:10px;">لا توجد أسئلة</div>';
     }
+
+    renderDevQuestionManager();
+
     const nList = document.getElementById('nList');
     if (nList) {
-        if (newsItems.length === 0) {
-            nList.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;padding:10px;">لا توجد تنبيهات</div>';
-        } else {
-            nList.innerHTML = newsItems.map((n, i) => `
-                <div class="dev-list-item">
-                    <span>${i+1}. ${n.title.substring(0, 35)}${n.title.length > 35 ? '...' : ''}</span>
-                    <button onclick="deleteNews(${i})">حذف</button>
-                </div>
-            `).join('');
-        }
+        nList.innerHTML = newsItems.length ? newsItems.map((n, i) => `
+            <div class="dev-list-item">
+                <span>${i+1}. ${escapeHtml(n.title.substring(0, 35))}${n.title.length > 35 ? '...' : ''}</span>
+                <button onclick="deleteNews(${i})">حذف</button>
+            </div>
+        `).join('') : '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:13px;padding:10px;">لا توجد تنبيهات</div>';
     }
 }
 
-// ==================== NAVIGATION ====================
-function showSection(id) {
-    document.getElementById('app').classList.add('hidden');
-    document.getElementById('quiz').classList.add('hidden');
-    document.getElementById(id).classList.remove('hidden');
-    if (id === 'quiz') { current = 0; score = 0; selected = null; renderQuestion(); }
+
+function renderDevQuestionManager() {
+    const box = document.getElementById('devQuestionManagerList');
+    if (!box) return;
+    const subjectId = document.getElementById('questionSubject')?.value;
+    const chapterId = document.getElementById('questionChapter')?.value;
+    const selectedQuestions = questions.filter(q => q.subjectId === subjectId && q.chapterId === chapterId);
+    if (!subjectId || !chapterId) {
+        box.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:12px;padding:10px;">اختر المادة والـ Chapter لعرض الأسئلة</div>'; return;
+    }
+    box.innerHTML = selectedQuestions.length ? selectedQuestions.map((q, i) => `
+        <div class="quiz-q-card">
+            <div class="quiz-q-top"><div>
+                <div class="quiz-q-text"><strong>${i+1}.</strong> ${escapeHtml(q.question)}</div>
+                <div class="quiz-q-meta">النوع: ${q.type === 'tf' ? 'صح / خطأ' : 'اختيار من متعدد'} • الإجابة: ${q.type === 'tf' ? (q.correct ? 'صح' : 'خطأ') : String.fromCharCode(65 + q.correct)} • المدة: ${q.time || 30} ثانية</div>
+            </div><div class="quiz-q-actions"><button onclick="deleteQuestion('${q.id}')">🗑️ حذف</button></div></div>
+            ${q.type === 'mcq' ? `<div class="quiz-q-meta" style="margin-top:8px;">أ) ${escapeHtml(q.answers[0])} • ب) ${escapeHtml(q.answers[1])} • ج) ${escapeHtml(q.answers[2])} • د) ${escapeHtml(q.answers[3])}</div>` : ''}
+        </div>`).join('') : '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:12px;padding:10px;">لا توجد أسئلة في هذا الـ Chapter</div>';
 }
 
-// ==================== FILES ====================
-function renderFiles() {
-    const box = document.getElementById('filesList');
-    if (!fileLinks.length) {
+// ==================== SUBJECT DISPLAY ====================
+function renderSubjects() {
+    const box = document.getElementById('subjectsList');
+    if (!box) return;
+
+    if (!subjects.length) {
         box.innerHTML = `
             <div class="empty-state">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <p>لا توجد ملفات حالياً</p>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <p>لا توجد مواد دراسية حالياً</p>
             </div>`;
         return;
     }
-    box.innerHTML = fileLinks.map((f, i) => `
-        <div class="file-item animate-in" style="animation-delay:${i*0.05}s">
-            <div class="file-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
-            </div>
-            <div class="file-info">
-                <strong>${f.name}</strong>
-                <small>${f.size}</small>
-            </div>
-            <div class="file-actions">
-                <a class="btn btn-sm btn-primary" href="${f.url}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    تحميل
-                </a>
 
+    box.innerHTML = subjects.map((s, si) => `
+        <div class="nav-card" onclick="toggleSubject('${s.id}')">
+            <div class="nav-card-info">
+                <h3>${escapeHtml(s.name)}</h3>
+                <p>${s.chapters.length} Chapters</p>
             </div>
+            <div class="nav-card-arrow">⌄</div>
+        </div>
+        <div id="subject_${s.id}" class="hidden" style="margin:-4px 0 12px;padding:0 10px;">
+            ${s.chapters.length ? s.chapters.map(c => `
+                <div class="file-item animate-in" style="margin-bottom:8px;">
+                    <div class="file-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
+                    <div class="file-info">
+                        <strong>${escapeHtml(c.name)}</strong>
+                        <small>${c.links.length} روابط</small>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();toggleChapter('${s.id}','${c.id}')">فتح</button>
+                    </div>
+                </div>
+                <div id="chapter_${c.id}" class="hidden" style="padding:0 8px 8px;">
+                    ${c.links.length ? c.links.map(l => `
+                        <div class="nav-card" style="padding:14px;margin-bottom:8px;" onclick="window.open('${escapeHtml(l.url)}','_blank','noopener')">
+                            <div class="nav-card-info">
+                                <h3>${escapeHtml(l.name)}</h3>
+                                <p>${escapeHtml(l.size || 'رابط')}</p>
+                            </div>
+                            <div class="nav-card-arrow">↗</div>
+                        </div>
+                    `).join('') : '<div class="empty-state" style="padding:15px;"><p>لا توجد روابط داخل هذا الـ Chapter حالياً</p></div>'}
+                </div>
+            `).join('') : '<div class="empty-state" style="padding:15px;"><p>لا توجد Chapters حالياً</p></div>'}
         </div>
     `).join('');
 }
 
-function deleteLink(index) {
-    if (confirm('هل تريد حذف هذا الرابط؟')) {
-        fileLinks.splice(index, 1);
-        renderFiles();
-        renderDevLists();
-        showToast('تم حذف الرابط');
-    }
+function toggleSubject(id) {
+    const el = document.getElementById('subject_' + id);
+    if (el) el.classList.toggle('hidden');
+}
+
+function toggleChapter(subjectId, chapterId) {
+    const el = document.getElementById('chapter_' + chapterId);
+    if (el) el.classList.toggle('hidden');
 }
 
 // ==================== NEWS ====================
@@ -1200,197 +1620,165 @@ function renderNews() {
     if (!newsItems.length) {
         box.innerHTML = `
             <div class="empty-state">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-0-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 <p>لا توجد تنبيهات حالياً</p>
             </div>`;
         return;
     }
-    box.innerHTML = newsItems.map((n, i) => `
-        <div class="news-item ${n.type} animate-in" style="animation-delay:${i*0.08}s">
-            <div class="news-date">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                ${n.date}
-                <span class="news-badge badge-${n.type}">${n.badge}</span>
-            </div>
-            <div class="news-title">${n.title}</div>
-            <div class="news-desc">${n.desc}</div>
+    box.innerHTML = newsItems.map(n => `
+        <div class="news-item ${escapeHtml(n.type)} animate-in">
+            <div class="news-date">${escapeHtml(n.date)} <span class="news-badge badge-${escapeHtml(n.type)}">${escapeHtml(n.badge)}</span></div>
+            <div class="news-title">${escapeHtml(n.title)}</div>
+            <div class="news-desc">${escapeHtml(n.desc)}</div>
         </div>
     `).join('');
 }
 
-// ==================== QUIZ ====================
-function renderQuestion() {
+// ==================== QUIZ NAVIGATION ====================
+function updateQuizCount() {
+    const el = document.getElementById('quizCount');
+    if (el) el.textContent = questions.length;
+}
+
+function renderQuizStart() {
     const card = document.getElementById('quizCard');
-    if (questions.length === 0) {
-        card.innerHTML = `
-            <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h3 style="margin-bottom:8px;color:var(--text);">لا توجد أسئلة حالياً</h3>
-                <p>سيتم إضافة الأسئلة قريباً</p>
-            </div>
-            <button class="btn btn-secondary" onclick="showSection('app')" style="margin-top:16px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                العودة للرئيسية
-            </button>
-        `;
+    if (!subjects.length) {
+        card.innerHTML = `<div class="empty-state"><h3>لا توجد مواد حالياً</h3><p>سيتم إضافة المواد والأسئلة قريباً</p></div>`;
         return;
     }
-    const q = questions[current];
+
     card.innerHTML = `
-        <div class="quiz-header">
-            <span style="font-size:13px;color:var(--text-secondary);font-weight:500;">السؤال ${current+1} من ${questions.length}</span>
-            <div class="quiz-progress">
-                <div class="progress-track"><div class="progress-fill" style="width:${((current+1)/questions.length)*100}%"></div></div>
-            </div>
+        <div class="section-header" style="margin-bottom:18px;">
+            <div class="section-icon">📝</div>
+            <h2>اختر المادة والـ Chapter</h2>
         </div>
-        <div class="question-text">${q.question}</div>
-        ${q.answers.map((a, i) => `
-            <div class="option" id="opt${i}" onclick="choose(${i})">
-                <div class="option-letter">${String.fromCharCode(65+i)}</div>
-                <div class="option-text">${a}</div>
+        ${subjects.map(s => `
+            <div class="nav-card" onclick="toggleQuizSubject('${s.id}')">
+                <div class="nav-card-info">
+                    <h3>${escapeHtml(s.name)}</h3>
+                    <p>${s.chapters.filter(c => questions.some(q => q.subjectId === s.id && q.chapterId === c.id)).length} Chapters بها أسئلة</p>
+                </div>
+                <div class="nav-card-arrow">⌄</div>
+            </div>
+            <div id="quizsub_${s.id}" class="hidden" style="margin:-4px 0 12px;padding:0 10px;">
+                ${s.chapters.map(c => {
+                    const count = questions.filter(q => q.subjectId === s.id && q.chapterId === c.id).length;
+                    return `<div class="nav-card" style="padding:14px;" onclick="startQuiz('${s.id}','${c.id}')">
+                        <div class="nav-card-info">
+                            <h3>${escapeHtml(c.name)}</h3>
+                            <p>${count} سؤال صح / خطأ</p>
+                        </div>
+                        <div class="nav-card-arrow">←</div>
+                    </div>`;
+                }).join('')}
             </div>
         `).join('')}
-        <button class="btn btn-primary" onclick="nextQuestion()" style="margin-top:20px;">
-            ${current < questions.length-1 ? 'السؤال التالي' : 'إنهاء الاختبار'}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
     `;
 }
 
-function choose(index) {
-    selected = index;
-    document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-    document.getElementById('opt'+index).classList.add('selected');
+function toggleQuizSubject(id) {
+    const el = document.getElementById('quizsub_' + id);
+    if (el) el.classList.toggle('hidden');
 }
 
-function nextQuestion() {
-    if (questions.length === 0) return;
-    if (selected === null) { showToast('اختر إجابة أولاً'); return; }
-    if (selected === questions[current].correct) score++;
-    current++; selected = null;
-    if (current < questions.length) {
-        renderQuestion();
-    } else {
-        showResult();
+function startQuiz(subjectId, chapterId) {
+    activeQuizSubject = subjectId;
+    activeQuizChapter = chapterId;
+    activeQuizQuestions = questions.filter(q => q.subjectId === subjectId && q.chapterId === chapterId);
+    current = 0;
+    score = 0;
+    selected = null;
+    clearInterval(quizTimer);
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const card = document.getElementById('quizCard');
+    if (!activeQuizQuestions.length) {
+        card.innerHTML = `<div class="empty-state"><h3>لا توجد أسئلة لهذا الـ Chapter حالياً</h3><p>سيتم إضافة الأسئلة قريباً</p></div><button class="btn btn-secondary" onclick="renderQuizStart()" style="margin-top:16px;">العودة لاختيار المادة</button>`;
+        return;
     }
+    clearInterval(quizTimer);
+    const q = activeQuizQuestions[current];
+    questionSecondsLeft = Math.max(5, q.time || 30);
+    const answers = q.type === 'tf' ? [true, false].map(v => v ? 'صح' : 'خطأ') : (q.answers || []);
+    card.innerHTML = `
+        <div class="quiz-header"><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">السؤال ${current+1} من ${activeQuizQuestions.length}</span><div class="quiz-progress"><div class="progress-track"><div class="progress-fill" style="width:${((current+1)/activeQuizQuestions.length)*100}%"></div></div></div></div>
+        <div class="quiz-timer"><span>⏱️ الوقت المتبقي:</span><span id="questionTimer" class="quiz-timer-value">${formatSeconds(questionSecondsLeft)}</span></div>
+        <div class="question-text">${escapeHtml(q.question)}</div>
+        ${answers.map((a,i) => `<div class="option ${selected === (q.type === 'tf' ? (i===0) : i) ? 'selected':''}" id="opt${i}" onclick="choose(${q.type === 'tf' ? (i===0) : i})"><div class="option-letter">${q.type === 'tf' ? (i===0 ? '✓':'✕') : String.fromCharCode(65+i)}</div><div class="option-text">${escapeHtml(String(a))}</div></div>`).join('')}
+        <button class="btn btn-primary" onclick="nextQuestion()" style="margin-top:20px;">${current < activeQuizQuestions.length-1 ? 'السؤال التالي' : 'إنهاء الاختبار'}</button>`;
+    quizTimer=setInterval(()=>{ questionSecondsLeft--; const el=document.getElementById('questionTimer'); if(!el)return; el.textContent=formatSeconds(questionSecondsLeft); el.classList.toggle('warning',questionSecondsLeft<=10&&questionSecondsLeft>5); el.classList.toggle('danger',questionSecondsLeft<=5); if(questionSecondsLeft<=0){clearInterval(quizTimer); selected=null; current++; if(current<activeQuizQuestions.length) renderQuestion(); else showResult();}},1000);
+}
+
+function choose(value) { selected = value; renderQuestion(); }
+
+function nextQuestion() {
+    clearInterval(quizTimer);
+    if (!activeQuizQuestions.length) return;
+    if (selected === null) { showToast('اختر صح أو خطأ أولاً'); return; }
+    const q = activeQuizQuestions[current];
+    const userAnswer = q.type === 'tf' ? (selected === 0) : selected;
+    if (userAnswer === q.correct) score++;
+    current++;
+    selected = null;
+
+    if (current < activeQuizQuestions.length) renderQuestion();
+    else showResult();
 }
 
 function showResult() {
-    const percent = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    clearInterval(quizTimer);
+    const total = activeQuizQuestions.length;
+    const percent = total ? Math.round((score / total) * 100) : 0;
     const passed = percent >= 60;
     const card = document.getElementById('quizCard');
+
     card.innerHTML = `
         <div class="result-wrap">
-            <div class="result-icon ${passed ? 'pass' : 'fail'}">
-                ${passed
-                    ? '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-                    : '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-                }
-            </div>
+            <div class="result-icon ${passed ? 'pass' : 'fail'}">${passed ? '✓' : '✕'}</div>
             <h2 style="font-size:22px;margin-bottom:4px;">${passed ? 'مبروك! نجحت في الاختبار' : 'حاول مرة أخرى'}</h2>
-            <div class="result-score">${score}/${questions.length}</div>
+            <div class="result-score">${score}/${total}</div>
             <div class="result-label">النسبة: ${percent}%</div>
             <div class="result-details">
-                <p>الطالب: <strong>${student}</strong></p>
+                <p>الطالب: <strong>${escapeHtml(student)}</strong></p>
                 <p>التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
             </div>
             <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-                <button class="btn btn-sm" onclick="showSection('quiz')" style="width:auto;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    إعادة الاختبار
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="showSection('app')" style="width:auto;">
-                    العودة للرئيسية
-                </button>
+                <button class="btn btn-sm" onclick="startQuiz('${activeQuizSubject}','${activeQuizChapter}')" style="width:auto;">إعادة الاختبار</button>
+                <button class="btn btn-secondary btn-sm" onclick="renderQuizStart()" style="width:auto;">اختيار Chapter آخر</button>
+                <button class="btn btn-secondary btn-sm" onclick="showSection('app')" style="width:auto;">العودة للرئيسية</button>
             </div>
         </div>
     `;
+}
+
+// ==================== NAVIGATION ====================
+function showSection(id) {
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('quiz').classList.add('hidden');
+    document.getElementById(id).classList.remove('hidden');
+    if (id === 'quiz') {
+        renderQuizStart();
+    }
 }
 
 // ==================== INIT ====================
 loadTheme();
-// ==================== جوجل شيتس - مزامنة البيانات ====================
-
-// 👇 غير الرقم ده بالـ ID بتاع جدول جوجل بتاعك
-const SHEET_ID = "2PACX-1vQpm4H0vkd7i1WOe6IRYoz96BOEcusQusMsd0VgFX5bZ5Ty6PsTy6e9DUAf5i2f0zOG9DuTmeQziB8I";
-
-// دالة تجيب البيانات من جوجل شيتس
-async function fetchFromSheet(sheetName) {
-    try {
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-        const response = await fetch(url);
-        const csvText = await response.text();
-        return parseCSV(csvText);
-    } catch (error) {
-        console.error('خطأ في جلب البيانات:', error);
-        return [];
-    }
-}
-
-// دالة تحول الـ CSV إلى مصفوفة
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return [];
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const result = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        const obj = {};
-        for (let j = 0; j < headers.length; j++) {
-            obj[headers[j]] = values[j] || '';
-        }
-        result.push(obj);
-    }
-    return result;
-}
-
-// دالة المزامنة الرئيسية
-async function syncFromSheet() {
-    showToast('جاري تحميل البيانات من السحابة...');
-    
-    try {
-        const linksData = await fetchFromSheet('Links');
-        const questionsData = await fetchFromSheet('Questions');
-        const newsData = await fetchFromSheet('News');
-        
-        if (linksData.length > 0) fileLinks = linksData;
-        if (questionsData.length > 0) questions = questionsData;
-        if (newsData.length > 0) newsItems = newsData;
-        
-        document.getElementById('quizCount').textContent = questions.length;
-        renderFiles();
-        renderNews();
-        renderDevLists();
-        
-        showToast('تم تحميل البيانات بنجاح!');
-    } catch (error) {
-        showToast('فيه مشكلة في التحميل، شيك النت');
-        console.error(error);
-    }
-}
-
-// نضيف زر المزامنة في لوحة المطور
-function addSyncButton() {
-    const panel = document.getElementById('devPanel');
-    if (!panel) return;
-    
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.innerHTML = `🔄 مزامنة من السحابة (جوجل شيتس)`;
-    btn.onclick = syncFromSheet;
-    btn.style.marginBottom = '16px';
-    
-    const firstChild = panel.firstChild;
-    panel.insertBefore(btn, firstChild);
-}
-
-// لما الصفحة تتحمل، نضيف الزر ونجيب البيانات
-document.addEventListener('DOMContentLoaded', function() {
-    addSyncButton();
-    syncFromSheet();
-});
+renderSubjects();
+renderNews();
+updateQuizCount();
+refreshAllDevSelects();
+renderSubjects();
+renderNews();
+updateQuizCount();
+refreshAllDevSelects();
+// ==================== INIT ====================
+loadTheme();
+renderSubjects();
+renderNews();
+updateQuizCount();
+refreshAllDevSelects();
 </script>
 </body>
 </html>
