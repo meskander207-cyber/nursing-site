@@ -1057,7 +1057,7 @@ body.dark .site-footer { border-color: var(--border); }
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, writeBatch, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
   import {
     getAuth,
     signInWithEmailAndPassword,
@@ -1078,6 +1078,12 @@ body.dark .site-footer { border-color: var(--border); }
     const firebaseApp = initializeApp(firebaseConfig);
     const db = getFirestore(firebaseApp);
     window.db = db;
+    window.firebaseCollection = collection;
+    window.firebaseGetDocs = getDocs;
+    window.firebaseDoc = doc;
+    window.firebaseSetDoc = setDoc;
+    window.firebaseWriteBatch = writeBatch;
+    window.firebaseOnSnapshot = onSnapshot;
     window.firebaseAuth = getAuth(firebaseApp);
     window.firebaseSignIn = signInWithEmailAndPassword;
     window.firebaseSignOut = signOut;
@@ -1096,10 +1102,19 @@ body.dark .site-footer { border-color: var(--border); }
 // Firebase Authentication handles the developer password securely.
 
 // ==================== DATA ====================
+// البيانات الأساسية يتم تحميلها من Firestore (السحابة).
+// نحتفظ بنسخة محلية مؤقتة فقط لاستخدامها مرة واحدة في نقل بياناتك القديمة إلى السحابة.
 let subjects = JSON.parse(localStorage.getItem('ni_subjects')) || [];
 let questions = JSON.parse(localStorage.getItem('ni_questions')) || [];
 let newsItems = JSON.parse(localStorage.getItem('ni_news')) || [];
+const localBackup = {
+    subjects: JSON.parse(JSON.stringify(subjects)),
+    questions: JSON.parse(JSON.stringify(questions)),
+    newsItems: JSON.parse(JSON.stringify(newsItems))
+};
 questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
+let cloudSyncStarted = false;
+let cloudSyncReady = false;
 
 // ==================== STATE ====================
 let student = "";
@@ -1123,14 +1138,113 @@ function bindFirebaseAuthListener() {
     });
 }
 window.addEventListener('firebase-ready', bindFirebaseAuthListener, { once: true });
+window.addEventListener('firebase-ready', initializeCloudData, { once: true });
 
 
 
 // ==================== UTILS ====================
-function saveData() {
-    localStorage.setItem('ni_subjects', JSON.stringify(subjects));
-    localStorage.setItem('ni_questions', JSON.stringify(questions));
-    localStorage.setItem('ni_news', JSON.stringify(newsItems));
+async function saveData() {
+    // الحفظ الرئيسي في Firestore حتى تكون الإضافة/الحذف مشتركة بين كل الأجهزة.
+    if (!window.db || !window.firebaseCollection || !window.firebaseDoc || !window.firebaseWriteBatch) {
+        showToast('Firebase غير جاهز للحفظ السحابي');
+        return false;
+    }
+
+    try {
+        const batch = window.firebaseWriteBatch(window.db);
+        const subjectsRef = window.firebaseCollection(window.db, 'subjects');
+        const questionsRef = window.firebaseCollection(window.db, 'questions');
+        const newsRef = window.firebaseCollection(window.db, 'news');
+
+        // حذف النسخة القديمة من المجموعات الثلاث ثم كتابة الحالة الحالية بالكامل.
+        const [oldSubjects, oldQuestions, oldNews] = await Promise.all([
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'subjects')),
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'questions')),
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'news'))
+        ]);
+
+        oldSubjects.forEach(d => batch.delete(d.ref));
+        oldQuestions.forEach(d => batch.delete(d.ref));
+        oldNews.forEach(d => batch.delete(d.ref));
+
+        subjects.forEach(item => batch.set(window.firebaseDoc(subjectsRef, item.id), item));
+        questions.forEach(item => batch.set(window.firebaseDoc(questionsRef, item.id), item));
+        newsItems.forEach((item, index) => {
+            const id = item.id || ('news_' + index + '_' + Date.now().toString(36));
+            if (!item.id) item.id = id;
+            batch.set(window.firebaseDoc(newsRef, id), item);
+        });
+
+        await batch.commit();
+        cloudSyncReady = true;
+        // لا نستخدم localStorage كمصدر للبيانات؛ فقط نحتفظ بنسخة احتياطية محلية.
+        localStorage.setItem('ni_subjects', JSON.stringify(subjects));
+        localStorage.setItem('ni_questions', JSON.stringify(questions));
+        localStorage.setItem('ni_news', JSON.stringify(newsItems));
+        return true;
+    } catch (error) {
+        console.error('Firestore save error:', error);
+        showToast('تعذر الحفظ على السحابة — تحقق من اتصال الإنترنت وصلاحيات Firebase');
+        return false;
+    }
+}
+
+async function loadCloudData() {
+    if (!window.db || !window.firebaseCollection || !window.firebaseGetDocs) return false;
+    try {
+        const [subjectSnap, questionSnap, newsSnap] = await Promise.all([
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'subjects')),
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'questions')),
+            window.firebaseGetDocs(window.firebaseCollection(window.db, 'news'))
+        ]);
+
+        subjects = subjectSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        questions = questionSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        newsItems = newsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
+        cloudSyncReady = true;
+        renderSubjects();
+        renderNews();
+        updateQuizCount();
+        refreshAllDevSelects();
+        return true;
+    } catch (error) {
+        console.error('Firestore load error:', error);
+        return false;
+    }
+}
+
+function startCloudListeners() {
+    if (cloudSyncStarted || !window.db || !window.firebaseOnSnapshot || !window.firebaseCollection) return;
+    cloudSyncStarted = true;
+
+    const applySubjects = snap => {
+        subjects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderSubjects();
+        refreshAllDevSelects();
+    };
+    const applyQuestions = snap => {
+        questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
+        updateQuizCount();
+        renderDevLists();
+    };
+    const applyNews = snap => {
+        newsItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderNews();
+        renderDevLists();
+    };
+
+    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'subjects'), applySubjects, err => console.error('subjects listener:', err));
+    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'questions'), applyQuestions, err => console.error('questions listener:', err));
+    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'news'), applyNews, err => console.error('news listener:', err));
+}
+
+async function initializeCloudData() {
+    const loaded = await loadCloudData();
+    if (loaded) {
+        startCloudListeners();
+    }
 }
 
 function makeId(prefix) {
@@ -1258,6 +1372,19 @@ async function unlockDev() {
 
         if (!credential || !credential.user) {
             throw { code: 'auth/no-user' };
+        }
+
+        // لو السحابة فارغة، ننقل بيانات جهازك القديمة إليها مرة واحدة فقط بعد دخول المطور.
+        const cloudWasLoaded = await loadCloudData();
+        if (cloudWasLoaded && subjects.length === 0 && questions.length === 0 && newsItems.length === 0 &&
+            (localBackup.subjects.length || localBackup.questions.length || localBackup.newsItems.length)) {
+            subjects = JSON.parse(JSON.stringify(localBackup.subjects));
+            questions = JSON.parse(JSON.stringify(localBackup.questions));
+            newsItems = JSON.parse(JSON.stringify(localBackup.newsItems));
+            await saveData();
+            startCloudListeners();
+        } else {
+            startCloudListeners();
         }
 
         devUnlocked = true;
@@ -1770,18 +1897,6 @@ function showSection(id) {
         renderQuizStart();
     }
 }
-// ==================== FIRESTORE ====================
-const db = getFirestore(firebaseApp);
-// ==================== INIT ====================
-loadTheme();
-renderSubjects();
-renderNews();
-updateQuizCount();
-refreshAllDevSelects();
-renderSubjects();
-renderNews();
-updateQuizCount();
-refreshAllDevSelects();
 // ==================== INIT ====================
 loadTheme();
 renderSubjects();
