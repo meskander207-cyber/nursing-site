@@ -1057,7 +1057,7 @@ body.dark .site-footer { border-color: var(--border); }
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, writeBatch, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
   import {
     getAuth,
     signInWithEmailAndPassword,
@@ -1078,11 +1078,9 @@ body.dark .site-footer { border-color: var(--border); }
     const firebaseApp = initializeApp(firebaseConfig);
     const db = getFirestore(firebaseApp);
     window.db = db;
-    window.firebaseCollection = collection;
-    window.firebaseGetDocs = getDocs;
     window.firebaseDoc = doc;
+    window.firebaseGetDoc = getDoc;
     window.firebaseSetDoc = setDoc;
-    window.firebaseWriteBatch = writeBatch;
     window.firebaseOnSnapshot = onSnapshot;
     window.firebaseAuth = getAuth(firebaseApp);
     window.firebaseSignIn = signInWithEmailAndPassword;
@@ -1102,19 +1100,20 @@ body.dark .site-footer { border-color: var(--border); }
 // Firebase Authentication handles the developer password securely.
 
 // ==================== DATA ====================
-// البيانات الأساسية يتم تحميلها من Firestore (السحابة).
-// نحتفظ بنسخة محلية مؤقتة فقط لاستخدامها مرة واحدة في نقل بياناتك القديمة إلى السحابة.
+// Firestore هو المصدر المشترك. localStorage مجرد نسخة احتياطية على الجهاز.
 let subjects = JSON.parse(localStorage.getItem('ni_subjects')) || [];
 let questions = JSON.parse(localStorage.getItem('ni_questions')) || [];
 let newsItems = JSON.parse(localStorage.getItem('ni_news')) || [];
+questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
 const localBackup = {
     subjects: JSON.parse(JSON.stringify(subjects)),
     questions: JSON.parse(JSON.stringify(questions)),
     newsItems: JSON.parse(JSON.stringify(newsItems))
 };
-questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
-let cloudSyncStarted = false;
-let cloudSyncReady = false;
+let cloudLoaded = false;
+let cloudExists = false;
+let cloudListenerStarted = false;
+let cloudSaveQueue = Promise.resolve();
 
 // ==================== STATE ====================
 let student = "";
@@ -1138,113 +1137,90 @@ function bindFirebaseAuthListener() {
     });
 }
 window.addEventListener('firebase-ready', bindFirebaseAuthListener, { once: true });
-window.addEventListener('firebase-ready', initializeCloudData, { once: true });
+window.addEventListener('firebase-ready', initializeCloud, { once: true });
 
 
 
 // ==================== UTILS ====================
-async function saveData() {
-    // الحفظ الرئيسي في Firestore حتى تكون الإضافة/الحذف مشتركة بين كل الأجهزة.
-    if (!window.db || !window.firebaseCollection || !window.firebaseDoc || !window.firebaseWriteBatch) {
+function saveLocalBackup() {
+    localStorage.setItem('ni_subjects', JSON.stringify(subjects));
+    localStorage.setItem('ni_questions', JSON.stringify(questions));
+    localStorage.setItem('ni_news', JSON.stringify(newsItems));
+}
+
+function cloudPayload() {
+    return {
+        subjects: JSON.parse(JSON.stringify(subjects)),
+        questions: JSON.parse(JSON.stringify(questions)).map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30})),
+        newsItems: JSON.parse(JSON.stringify(newsItems)),
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function saveData() {
+    saveLocalBackup();
+    if (!window.db || !window.firebaseDoc || !window.firebaseSetDoc) {
         showToast('Firebase غير جاهز للحفظ السحابي');
-        return false;
+        return;
     }
-
-    try {
-        const batch = window.firebaseWriteBatch(window.db);
-        const subjectsRef = window.firebaseCollection(window.db, 'subjects');
-        const questionsRef = window.firebaseCollection(window.db, 'questions');
-        const newsRef = window.firebaseCollection(window.db, 'news');
-
-        // حذف النسخة القديمة من المجموعات الثلاث ثم كتابة الحالة الحالية بالكامل.
-        const [oldSubjects, oldQuestions, oldNews] = await Promise.all([
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'subjects')),
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'questions')),
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'news'))
-        ]);
-
-        oldSubjects.forEach(d => batch.delete(d.ref));
-        oldQuestions.forEach(d => batch.delete(d.ref));
-        oldNews.forEach(d => batch.delete(d.ref));
-
-        subjects.forEach(item => batch.set(window.firebaseDoc(subjectsRef, item.id), item));
-        questions.forEach(item => batch.set(window.firebaseDoc(questionsRef, item.id), item));
-        newsItems.forEach((item, index) => {
-            const id = item.id || ('news_' + index + '_' + Date.now().toString(36));
-            if (!item.id) item.id = id;
-            batch.set(window.firebaseDoc(newsRef, id), item);
-        });
-
-        await batch.commit();
-        cloudSyncReady = true;
-        // لا نستخدم localStorage كمصدر للبيانات؛ فقط نحتفظ بنسخة احتياطية محلية.
-        localStorage.setItem('ni_subjects', JSON.stringify(subjects));
-        localStorage.setItem('ni_questions', JSON.stringify(questions));
-        localStorage.setItem('ni_news', JSON.stringify(newsItems));
-        return true;
-    } catch (error) {
+    const payload = cloudPayload();
+    cloudSaveQueue = cloudSaveQueue.then(async () => {
+        await window.firebaseSetDoc(window.firebaseDoc(window.db, 'siteData', 'main'), payload);
+        cloudExists = true;
+        cloudLoaded = true;
+    }).catch(error => {
         console.error('Firestore save error:', error);
-        showToast('تعذر الحفظ على السحابة — تحقق من اتصال الإنترنت وصلاحيات Firebase');
-        return false;
-    }
+        showToast('فشل الحفظ السحابي: تحقق من قواعد Firestore والإنترنت');
+    });
 }
 
 async function loadCloudData() {
-    if (!window.db || !window.firebaseCollection || !window.firebaseGetDocs) return false;
+    if (!window.db || !window.firebaseDoc || !window.firebaseGetDoc) return false;
     try {
-        const [subjectSnap, questionSnap, newsSnap] = await Promise.all([
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'subjects')),
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'questions')),
-            window.firebaseGetDocs(window.firebaseCollection(window.db, 'news'))
-        ]);
-
-        subjects = subjectSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        questions = questionSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        newsItems = newsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const snap = await window.firebaseGetDoc(window.firebaseDoc(window.db, 'siteData', 'main'));
+        cloudLoaded = true;
+        if (!snap.exists()) {
+            cloudExists = false;
+            return false;
+        }
+        const d = snap.data() || {};
+        subjects = Array.isArray(d.subjects) ? d.subjects : [];
+        questions = Array.isArray(d.questions) ? d.questions : [];
+        newsItems = Array.isArray(d.newsItems) ? d.newsItems : [];
         questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
-        cloudSyncReady = true;
-        renderSubjects();
-        renderNews();
-        updateQuizCount();
-        refreshAllDevSelects();
+        cloudExists = true;
+        saveLocalBackup();
+        renderSubjects(); renderNews(); updateQuizCount(); refreshAllDevSelects();
         return true;
     } catch (error) {
-        console.error('Firestore load error:', error);
+        console.error('Firestore read error:', error);
+        cloudLoaded = false;
+        showToast('تعذر قراءة البيانات من Firebase');
         return false;
     }
 }
 
-function startCloudListeners() {
-    if (cloudSyncStarted || !window.db || !window.firebaseOnSnapshot || !window.firebaseCollection) return;
-    cloudSyncStarted = true;
-
-    const applySubjects = snap => {
-        subjects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderSubjects();
-        refreshAllDevSelects();
-    };
-    const applyQuestions = snap => {
-        questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function startCloudListener() {
+    if (cloudListenerStarted || !window.db || !window.firebaseDoc || !window.firebaseOnSnapshot) return;
+    cloudListenerStarted = true;
+    window.firebaseOnSnapshot(window.firebaseDoc(window.db, 'siteData', 'main'), snap => {
+        if (!snap.exists()) return;
+        const d = snap.data() || {};
+        subjects = Array.isArray(d.subjects) ? d.subjects : [];
+        questions = Array.isArray(d.questions) ? d.questions : [];
+        newsItems = Array.isArray(d.newsItems) ? d.newsItems : [];
         questions = questions.map(q => ({...q, type: q.type || (Array.isArray(q.answers) ? 'mcq' : 'tf'), time: q.time || 30}));
-        updateQuizCount();
-        renderDevLists();
-    };
-    const applyNews = snap => {
-        newsItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderNews();
-        renderDevLists();
-    };
-
-    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'subjects'), applySubjects, err => console.error('subjects listener:', err));
-    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'questions'), applyQuestions, err => console.error('questions listener:', err));
-    window.firebaseOnSnapshot(window.firebaseCollection(window.db, 'news'), applyNews, err => console.error('news listener:', err));
+        cloudExists = true; cloudLoaded = true;
+        saveLocalBackup();
+        renderSubjects(); renderNews(); updateQuizCount(); refreshAllDevSelects();
+        if (typeof renderDevLists === 'function') renderDevLists();
+        if (typeof renderDevQuestionManager === 'function') renderDevQuestionManager();
+    }, error => console.error('Firestore listener error:', error));
 }
 
-async function initializeCloudData() {
-    const loaded = await loadCloudData();
-    if (loaded) {
-        startCloudListeners();
-    }
+async function initializeCloud() {
+    await loadCloudData();
+    startCloudListener();
 }
 
 function makeId(prefix) {
@@ -1374,18 +1350,14 @@ async function unlockDev() {
             throw { code: 'auth/no-user' };
         }
 
-        // لو السحابة فارغة، ننقل بيانات جهازك القديمة إليها مرة واحدة فقط بعد دخول المطور.
-        const cloudWasLoaded = await loadCloudData();
-        if (cloudWasLoaded && subjects.length === 0 && questions.length === 0 && newsItems.length === 0 &&
-            (localBackup.subjects.length || localBackup.questions.length || localBackup.newsItems.length)) {
+        // لو Firestore فاضي، انقل نسخة الجهاز القديمة للسحابة مرة واحدة فقط بعد دخول المطور.
+        if (!cloudExists && (localBackup.subjects.length || localBackup.questions.length || localBackup.newsItems.length)) {
             subjects = JSON.parse(JSON.stringify(localBackup.subjects));
             questions = JSON.parse(JSON.stringify(localBackup.questions));
             newsItems = JSON.parse(JSON.stringify(localBackup.newsItems));
-            await saveData();
-            startCloudListeners();
-        } else {
-            startCloudListeners();
+            saveData();
         }
+        startCloudListener();
 
         devUnlocked = true;
         document.getElementById('devUnlock').classList.add('hidden');
